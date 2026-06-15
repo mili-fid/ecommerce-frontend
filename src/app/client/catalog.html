@@ -1,0 +1,121 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'catalog.title' | t }}</h1>
+
+<mat-card class="mb-6">
+  <mat-card-content class="flex flex-wrap gap-4 pt-4 items-center">
+    <mat-form-field class="flex-1 min-w-48">
+      <mat-label>{{ 'common.search' | t }}</mat-label>
+      <input matInput [(ngModel)]="search" (input)="onSearchInput()" (keyup.enter)="load()"
+             [matAutocomplete]="auto" />
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="pickSuggestion()">
+        @for (s of suggestions; track s) {
+          <mat-option [value]="s">{{ s }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+    <mat-form-field class="w-40">
+      <mat-label>{{ 'catalog.category' | t }}</mat-label>
+      <input matInput [(ngModel)]="category" (change)="onCategoryChange()" />
+    </mat-form-field>
+    @if (subcategories.length > 0) {
+      <mat-form-field class="w-40">
+        <mat-label>{{ 'catalog.subcategory' | t }}</mat-label>
+        <mat-select [(ngModel)]="subcategory">
+          <mat-option value="">{{ 'common.all' | t }}</mat-option>
+          @for (sc of subcategories; track sc) {
+            <mat-option [value]="sc">{{ sc }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    @if (companies.length > 0) {
+      <mat-form-field class="w-44">
+        <mat-label>{{ 'catalog.company' | t }}</mat-label>
+        <mat-select [(ngModel)]="companyId">
+          <mat-option value="">{{ 'common.all' | t }}</mat-option>
+          @for (c of companies; track c._id) {
+            <mat-option [value]="c._id">
+              <span class="inline-flex items-center gap-2">
+                @if (c.colorCode) {
+                  <span class="w-2.5 h-2.5 rounded-full inline-block" [style.background]="c.colorCode"></span>
+                }
+                {{ c.name }}
+              </span>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <mat-form-field class="w-28">
+      <mat-label>{{ 'catalog.minPrice' | t }}</mat-label>
+      <input matInput type="number" [(ngModel)]="minPrice" />
+    </mat-form-field>
+    <mat-form-field class="w-28">
+      <mat-label>{{ 'catalog.maxPrice' | t }}</mat-label>
+      <input matInput type="number" [(ngModel)]="maxPrice" />
+    </mat-form-field>
+    <mat-form-field class="w-32">
+      <mat-label>Brand</mat-label>
+      <input matInput [(ngModel)]="brand" placeholder="e.g. Samsung" />
+    </mat-form-field>
+    <mat-form-field class="w-28">
+      <mat-label>Min rating ★</mat-label>
+      <input matInput type="number" [(ngModel)]="minRating" min="1" max="5" />
+    </mat-form-field>
+    <mat-form-field class="w-44">
+      <mat-label>{{ 'catalog.sortBy' | t }}</mat-label>
+      <mat-select [(ngModel)]="sort">
+        <mat-option value="">{{ 'catalog.newest' | t }}</mat-option>
+        <mat-option value="popularity">{{ 'catalog.popularity' | t }}</mat-option>
+        <mat-option value="price_asc">{{ 'catalog.priceAsc' | t }}</mat-option>
+        <mat-option value="price_desc">{{ 'catalog.priceDesc' | t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>search</mat-icon> {{ 'common.apply' | t }}
+    </button>
+  </mat-card-content>
+</mat-card>
+
+@if (loading) {
+  <p class="text-gray-500 dark:text-gray-400">{{ 'common.loading' | t }}</p>
+} @else if (products.length === 0) {
+  <p class="text-gray-500 dark:text-gray-400">{{ 'catalog.noProducts' | t }}</p>
+} @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    @for (product of products; track product._id) {
+      <mat-card class="flex flex-col">
+        <a [routerLink]="['/catalog', product._id]" class="h-40 bg-gray-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+          @if (product.photos.length > 0) {
+            <img [src]="product.photos[0]" class="w-full h-40 object-cover" />
+          } @else {
+            <mat-icon class="!text-6xl !w-16 !h-16 text-gray-400">image</mat-icon>
+          }
+        </a>
+        <mat-card-content class="flex-1 pt-3">
+          <div class="flex items-center gap-2">
+            @if (product.companyColorCode) {
+              <span class="w-3 h-3 rounded-full inline-block" [style.background]="product.companyColorCode"></span>
+            }
+            <h2 class="font-bold text-lg">{{ product.name }}</h2>
+          </div>
+          <p class="text-xs text-yellow-600">★ {{ product.rating }}</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm line-clamp-2">{{ product.description }}</p>
+          <p class="font-bold text-xl mt-2">{{ product.price }} TND</p>
+          <p class="text-xs" [class.text-green-600]="product.stock > 0" [class.text-red-500]="product.stock === 0">
+            {{ product.stock > 0 ? product.stock + ' ' + ('catalog.inStock' | t) : ('catalog.outOfStock' | t) }}
+          </p>
+        </mat-card-content>
+        <mat-card-actions class="flex gap-1">
+          <a mat-stroked-button [routerLink]="['/catalog', product._id]" class="flex-1">
+            {{ 'catalog.details' | t }}
+          </a>
+          <button mat-raised-button color="primary" class="flex-1"
+                  [disabled]="product.stock === 0"
+                  (click)="addToCart(product)">
+            <mat-icon>add_shopping_cart</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

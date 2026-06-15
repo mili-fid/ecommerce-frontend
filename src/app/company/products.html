@@ -1,0 +1,104 @@
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-3xl font-bold">{{ 'company.myProducts' | t }}</h1>
+  <button mat-raised-button color="primary" (click)="openCreate()">
+    <mat-icon>add</mat-icon> {{ 'company.addProduct' | t }}
+  </button>
+</div>
+
+<!-- Sales performance (spec 2.2) -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+  <mat-card class="text-center"><mat-card-content class="pt-4">
+    <p class="text-3xl font-bold">{{ products.length }}</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">{{ 'company.productsCount' | t }}</p>
+  </mat-card-content></mat-card>
+  <mat-card class="text-center"><mat-card-content class="pt-4">
+    <p class="text-3xl font-bold">{{ totalUnitsSold }}</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">{{ 'company.unitsSold' | t }}</p>
+  </mat-card-content></mat-card>
+  <mat-card class="text-center col-span-2 md:col-span-1"><mat-card-content class="pt-4">
+    <p class="text-3xl font-bold">{{ estimatedRevenue }} TND</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">{{ 'company.grossSales' | t }}</p>
+  </mat-card-content></mat-card>
+</div>
+
+@if (showForm) {
+  <mat-card class="mb-6">
+    <mat-card-header>
+      <mat-card-title>{{ editingId ? ('company.editProduct' | t) : ('company.newProduct' | t) }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'common.name' | t }}</mat-label>
+        <input matInput [(ngModel)]="form.name" />
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'catalog.category' | t }}</mat-label>
+        <input matInput [(ngModel)]="form.category" />
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'common.price' | t }} (TND)</mat-label>
+        <input matInput type="number" [(ngModel)]="form.price" />
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'company.initialStock' | t }}</mat-label>
+        <input matInput type="number" [(ngModel)]="form.stock" />
+      </mat-form-field>
+      <div class="flex items-center gap-3">
+        @if (form.photos.length > 0) {
+          <img [src]="form.photos[0]" class="w-16 h-16 rounded object-cover border" />
+        }
+        <input type="file" accept="image/*" hidden #photoInput (change)="onPhoto($event)" />
+        <button mat-stroked-button type="button" (click)="photoInput.click()">
+          <mat-icon>photo_camera</mat-icon> {{ 'company.photo' | t }}
+        </button>
+      </div>
+      <mat-form-field class="md:col-span-2 w-full">
+        <mat-label>{{ 'company.description' | t }}</mat-label>
+        <textarea matInput [(ngModel)]="form.description" rows="3"></textarea>
+      </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions class="flex gap-2 px-4 pb-4">
+      <button mat-raised-button color="primary" (click)="save()">{{ 'common.save' | t }}</button>
+      <button mat-stroked-button (click)="showForm = false">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+}
+
+<mat-table [dataSource]="products" class="w-full shadow rounded">
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.product' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p" class="font-bold">{{ p.name }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="price">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.price' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">{{ p.price }} TND</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="stock">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.stock' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p" [class.text-red-500]="p.stock <= 5">{{ p.stock }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="sold">
+    <mat-header-cell *matHeaderCellDef>{{ 'company.sold' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p" class="font-bold">{{ p.salesCount }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.status' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      <span class="px-2 py-1 rounded text-xs font-bold"
+            [class.bg-yellow-100]="p.status==='pending'"
+            [class.bg-green-100]="p.status==='active'"
+            [class.bg-red-100]="p.status==='rejected'">
+        {{ 'status.' + p.status | t }}
+      </span>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.actions' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      <button mat-icon-button (click)="openEdit(p)"><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button color="warn" (click)="remove(p)"><mat-icon>delete</mat-icon></button>
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

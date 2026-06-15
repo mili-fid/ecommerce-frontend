@@ -1,0 +1,62 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">{{ 'company.stockTitle' | t }}</h1>
+  <button mat-raised-button color="primary" (click)="showForm = !showForm">
+    <mat-icon>add</mat-icon> {{ 'company.newRequest' | t }}
+  </button>
+</div>
+
+@if (showForm) {
+  <mat-card class="mb-6">
+    <mat-card-header><mat-card-title>{{ 'company.requestStock' | t }}</mat-card-title></mat-card-header>
+    <mat-card-content class="flex flex-col gap-4 pt-4">
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'common.product' | t }}</mat-label>
+        <mat-select [(ngModel)]="form.product">
+          @for (p of products; track p._id) {
+            <mat-option [value]="p._id">{{ p.name }} ({{ p.stock }} in stock)</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'company.qty' | t }}</mat-label>
+        <input matInput type="number" [(ngModel)]="form.quantity" min="1" />
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>{{ 'admin.justification' | t }}</mat-label>
+        <textarea matInput [(ngModel)]="form.justification" rows="3" [placeholder]="'company.justifyPh' | t"></textarea>
+      </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions class="flex gap-2 px-4 pb-4">
+      <button mat-raised-button color="primary" (click)="submit()">{{ 'tickets.send' | t }}</button>
+      <button mat-stroked-button (click)="showForm = false">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+}
+
+<mat-table [dataSource]="requests" class="w-full shadow rounded">
+  <ng-container matColumnDef="product">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.product' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let r">{{ r.product?.name }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="quantity">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.requestedQty' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let r" class="font-bold">+{{ r.quantity }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="justification">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.justification' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let r" class="text-sm text-gray-600 dark:text-gray-300">{{ r.justification }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.status' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let r">
+      <span class="px-2 py-1 rounded text-xs font-bold"
+            [class.bg-yellow-100]="r.status==='pending'"
+            [class.bg-green-100]="r.status==='approved'"
+            [class.bg-red-100]="r.status==='rejected'">
+        {{ 'status.' + r.status | t }}
+      </span>
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

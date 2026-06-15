@@ -1,0 +1,51 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'admin.ordersTitle' | t }}</h1>
+<mat-card class="mb-4">
+  <mat-card-content class="flex gap-4 pt-4">
+    <mat-form-field class="w-44">
+      <mat-label>{{ 'common.status' | t }}</mat-label>
+      <mat-select [(ngModel)]="filterStatus" (ngModelChange)="load()">
+        <mat-option value="">{{ 'common.all' | t }}</mat-option>
+        <mat-option value="pending">{{ 'status.pending' | t }}</mat-option>
+        <mat-option value="accepted">{{ 'status.accepted' | t }}</mat-option>
+        <mat-option value="in_transit">{{ 'status.in_transit' | t }}</mat-option>
+        <mat-option value="delivered">{{ 'status.delivered' | t }}</mat-option>
+        <mat-option value="cancelled">{{ 'status.cancelled' | t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+<mat-table [dataSource]="orders" class="w-full shadow rounded">
+  <ng-container matColumnDef="client">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.client' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">{{ o.client?.firstName }} {{ o.client?.lastName }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="driver">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.driver' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">{{ o.driver?.firstName }} {{ o.driver?.lastName }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="total">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.total' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o" class="font-bold">{{ o.total }} TND</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="payment">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.payment' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">{{ o.paymentMethod }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.status' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">
+      <span class="px-2 py-1 rounded text-xs font-bold" [class]="statusColor(o.status)">{{ 'status.' + o.status | t }}</span>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.actions' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">
+      <button mat-icon-button (click)="downloadInvoice(o)"><mat-icon>receipt_long</mat-icon></button>
+      @if (o.status !== 'delivered' && o.status !== 'cancelled') {
+        <button mat-icon-button color="warn" (click)="cancel(o)"><mat-icon>cancel</mat-icon></button>
+      }
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

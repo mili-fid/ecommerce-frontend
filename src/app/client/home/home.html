@@ -1,0 +1,63 @@
+<!-- Promotional carousel (spec 7.1 "bandeau promotionnel") -->
+<div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-900 to-purple-800 text-white mb-6 h-24 flex items-center justify-center">
+  <div class="text-center">
+    <p class="text-2xl font-bold">{{ 'home.promoTitle' | t }}</p>
+    <p class="text-white/80 text-sm">{{ 'home.promoSub' | t }}</p>
+  </div>
+</div>
+
+<!-- Hero banner (spec 7.1) -->
+<div class="rounded-2xl bg-gradient-to-r from-indigo-900 via-blue-800 to-blue-600 text-white p-8 md:p-14 mb-10">
+  <h1 class="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">{{ 'home.heroTitle' | t }}</h1>
+  <p class="mt-4 max-w-xl text-white/85">{{ 'home.heroSub' | t }}</p>
+  <a mat-raised-button routerLink="/catalog" class="!mt-6 !bg-white !text-blue-900 !font-bold">
+    <mat-icon>storefront</mat-icon> {{ 'home.shopNow' | t }}
+  </a>
+</div>
+
+<!-- Categories (spec 7.1) -->
+@if (categories.length > 0) {
+  <h2 class="text-2xl font-bold mb-4">{{ 'home.categories' | t }}</h2>
+  <div class="flex flex-wrap gap-3 mb-10">
+    @for (c of categories; track c) {
+      <button mat-stroked-button (click)="browseCategory(c)">
+        <mat-icon class="mr-1">sell</mat-icon>{{ c }}
+      </button>
+    }
+  </div>
+}
+
+<!-- Featured products (spec 7.1) -->
+<h2 class="text-2xl font-bold mb-4">{{ 'home.featured' | t }}</h2>
+@if (featured.length === 0) {
+  <p class="text-gray-500 dark:text-gray-400">{{ 'catalog.noProducts' | t }}</p>
+} @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (product of featured; track product._id) {
+      <mat-card class="flex flex-col">
+        <a [routerLink]="['/catalog', product._id]" class="h-36 bg-gray-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+          @if (product.photos.length > 0) {
+            <img [src]="product.photos[0]" class="w-full h-36 object-cover" />
+          } @else {
+            <mat-icon class="!text-5xl !w-14 !h-14 text-gray-400">image</mat-icon>
+          }
+        </a>
+        <mat-card-content class="flex-1 pt-3">
+          <div class="flex items-center gap-2">
+            @if (product.companyColorCode) {
+              <span class="w-3 h-3 rounded-full inline-block" [style.background]="product.companyColorCode"></span>
+            }
+            <h3 class="font-bold">{{ product.name }}</h3>
+          </div>
+          <p class="font-bold text-lg mt-1">{{ product.price }} TND</p>
+          <p class="text-xs text-yellow-600">★ {{ product.rating }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" class="w-full" [disabled]="product.stock === 0" (click)="addToCart(product)">
+            <mat-icon>add_shopping_cart</mat-icon> {{ 'catalog.addToCart' | t }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

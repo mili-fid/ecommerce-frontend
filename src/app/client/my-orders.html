@@ -1,0 +1,43 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'orders.title' | t }}</h1>
+
+@if (orders.length === 0) {
+  <mat-card><mat-card-content class="py-8 text-center text-gray-500 dark:text-gray-400">
+    {{ 'orders.none' | t }}
+  </mat-card-content></mat-card>
+} @else {
+  <div class="flex flex-col gap-4">
+    @for (order of orders; track order._id) {
+      <mat-card>
+        <mat-card-content class="pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-3 py-1 rounded-full text-sm font-bold" [class]="statusColor(order.status)">
+              {{ 'status.' + order.status | t }}
+            </span>
+            <span class="font-bold text-lg">{{ order.total }} TND</span>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <mat-icon class="!text-sm !w-4 !h-4 align-middle">location_on</mat-icon> {{ order.deliveryAddress }}
+            · {{ 'common.driver' | t }}: {{ order.driver?.firstName }} {{ order.driver?.lastName }}
+            · {{ 'common.payment' | t }}: {{ order.paymentMethod }}
+            @if (order.status === 'cancelled' && order.paymentMethod !== 'cash') {
+              <span class="ml-1 text-orange-600">({{ 'orders.refundPending' | t }})</span>
+            }
+          </p>
+          @for (item of order.items; track item.product) {
+            <p class="text-sm">{{ item.quantity }} × {{ item.name }} — {{ item.price }} TND</p>
+          }
+          <div class="flex gap-2 mt-3">
+            <button mat-stroked-button (click)="downloadInvoice(order)">
+              <mat-icon>receipt_long</mat-icon> {{ 'orders.invoice' | t }}
+            </button>
+            @if (order.status === 'pending') {
+              <button mat-stroked-button color="warn" (click)="cancel(order)">
+                {{ 'orders.cancelOrder' | t }}
+              </button>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}

@@ -1,0 +1,38 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-slate-900">
+  <mat-card class="w-full max-w-md p-6">
+    <mat-card-header>
+      <mat-card-title class="text-2xl font-bold text-center w-full mb-4">{{ 'auth.loginTitle' | t }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="flex flex-col gap-4 mt-4">
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'common.email' | t }}</mat-label>
+          <input matInput [(ngModel)]="email" type="email" (keyup.enter)="login()" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'auth.password' | t }}</mat-label>
+          <input matInput [(ngModel)]="password" type="password" (keyup.enter)="login()" />
+        </mat-form-field>
+        <div style="min-height: 20px;">
+          @if (error) {
+            <p class="text-red-500 text-sm">{{ error }}</p>
+          }
+        </div>
+        <button mat-raised-button color="primary" class="w-full" (click)="login()" [disabled]="loading">
+          @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            {{ 'auth.loginBtn' | t }}
+          }
+        </button>
+        <p class="text-center text-sm">
+          {{ 'auth.noAccount' | t }} <a routerLink="/register" class="text-blue-500">{{ 'auth.register' | t }}</a>
+          &nbsp;·&nbsp;
+          <a routerLink="/forgot-password" class="text-blue-500">{{ 'auth.forgotTitle' | t }}</a>
+          &nbsp;·&nbsp;
+          <a routerLink="/catalog" class="text-blue-500">{{ 'auth.browseVisitor' | t }}</a>
+        </p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

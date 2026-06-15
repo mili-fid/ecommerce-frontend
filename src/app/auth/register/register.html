@@ -1,0 +1,65 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-slate-900">
+  <mat-card class="w-full max-w-md p-6">
+    <mat-card-header>
+      <mat-card-title class="text-2xl font-bold text-center w-full mb-4">{{ 'auth.registerTitle' | t }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="flex flex-col gap-2 mt-4">
+        <div class="flex gap-4">
+          <mat-form-field class="flex-1">
+            <mat-label>{{ 'auth.firstName' | t }}</mat-label>
+            <input matInput [(ngModel)]="firstName" />
+          </mat-form-field>
+          <mat-form-field class="flex-1">
+            <mat-label>{{ 'auth.lastName' | t }}</mat-label>
+            <input matInput [(ngModel)]="lastName" />
+          </mat-form-field>
+        </div>
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'common.email' | t }}</mat-label>
+          <input matInput [(ngModel)]="email" type="email" />
+        </mat-form-field>
+        <!-- Real-time validation feedback (spec 3.1.1) -->
+        @if (email.length > 0) {
+          <p class="text-xs -mt-1 mb-1 flex items-center gap-1"
+             [class.text-green-600]="emailValid" [class.text-red-500]="!emailValid">
+            <mat-icon class="!text-sm !w-4 !h-4">{{ emailValid ? 'check_circle' : 'error' }}</mat-icon>
+            {{ emailValid ? ('common.email' | t) + ' OK' : ('auth.emailInvalid' | t) }}
+          </p>
+        }
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'auth.password' | t }}</mat-label>
+          <input matInput [(ngModel)]="password" type="password" />
+        </mat-form-field>
+        @if (password.length > 0) {
+          <p class="text-xs -mt-1 mb-1 flex items-center gap-1"
+             [class.text-green-600]="passwordValid" [class.text-red-500]="!passwordValid">
+            <mat-icon class="!text-sm !w-4 !h-4">{{ passwordValid ? 'check_circle' : 'error' }}</mat-icon>
+            {{ passwordValid ? ('auth.pwOk' | t) : ('auth.pwShort' | t) }}
+          </p>
+        }
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'auth.accountType' | t }}</mat-label>
+          <mat-select [(ngModel)]="role">
+            <mat-option value="client">{{ 'auth.roleClient' | t }}</mat-option>
+            <mat-option value="company">{{ 'auth.roleCompany' | t }}</mat-option>
+            <mat-option value="driver">{{ 'auth.roleDriver' | t }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div style="min-height: 20px;">
+          @if (error) {
+            <p class="text-red-500 text-sm">{{ error }}</p>
+          }
+        </div>
+        <button mat-raised-button color="primary" class="w-full" (click)="register()" [disabled]="loading">
+          @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            {{ 'auth.register' | t }}
+          }
+        </button>
+        <p class="text-center text-sm">{{ 'auth.haveAccount' | t }} <a routerLink="/login" class="text-blue-500">{{ 'auth.loginBtn' | t }}</a></p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,12 @@
+stages:
+  - build
+
+build-frontend:
+  stage: build
+  image: node:24-alpine
+  script:
+    - npm ci --legacy-peer-deps
+    - npx ng build
+  artifacts:
+    paths:
+      - dist/

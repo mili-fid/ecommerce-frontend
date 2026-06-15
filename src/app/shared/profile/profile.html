@@ -1,0 +1,88 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'profile.title' | t }}</h1>
+
+<div class="max-w-xl">
+  <mat-card>
+    <mat-card-content class="pt-6">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-20 h-20 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl font-bold overflow-hidden">
+          @if (avatar) {
+            <img [src]="avatar" class="w-20 h-20 rounded-full object-cover" />
+          } @else {
+            {{ initial }}
+          }
+        </div>
+        <div>
+          <p class="font-bold">{{ 'profile.avatar' | t }}</p>
+          <input type="file" accept="image/*" hidden #fileInput (change)="onFile($event)" />
+          <button mat-stroked-button (click)="fileInput.click()">
+            <mat-icon>photo_camera</mat-icon> {{ 'profile.changeAvatar' | t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <mat-form-field class="flex-1">
+          <mat-label>{{ 'auth.firstName' | t }}</mat-label>
+          <input matInput [(ngModel)]="firstName" />
+        </mat-form-field>
+        <mat-form-field class="flex-1">
+          <mat-label>{{ 'auth.lastName' | t }}</mat-label>
+          <input matInput [(ngModel)]="lastName" />
+        </mat-form-field>
+      </div>
+
+      @if (role === 'company') {
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'profile.warehouse' | t }}</mat-label>
+          <input matInput [(ngModel)]="companyAddress" placeholder="e.g. 5 Rue de la République, Tunis" />
+          <mat-hint>{{ 'profile.warehouseHint' | t }}</mat-hint>
+        </mat-form-field>
+      }
+
+      @if (role === 'driver') {
+        <h2 class="font-bold text-lg mt-2 mb-3">{{ 'profile.driverSettings' | t }}</h2>
+        <div class="flex gap-4">
+          <mat-form-field class="flex-1">
+            <mat-label>{{ 'profile.feeLabel' | t }}</mat-label>
+            <input matInput type="number" min="0" [(ngModel)]="deliveryFee" />
+            <mat-hint>{{ 'profile.feeHint' | t }}</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="flex-1">
+            <mat-label>{{ 'profile.zone' | t }}</mat-label>
+            <input matInput [(ngModel)]="zone" />
+          </mat-form-field>
+        </div>
+      }
+
+      <button mat-raised-button color="primary" class="!mt-4" (click)="save()" [disabled]="saving">
+        {{ 'common.save' | t }}
+      </button>
+
+      <div class="mt-6 pt-4 border-t">
+        <button mat-stroked-button (click)="showPwForm = !showPwForm">
+          <mat-icon>lock</mat-icon> {{ 'profile.changePassword' | t }}
+        </button>
+        @if (showPwForm) {
+          <div class="flex flex-col gap-3 mt-3">
+            <mat-form-field class="w-full">
+              <mat-label>{{ 'auth.currentPassword' | t }}</mat-label>
+              <input matInput [(ngModel)]="currentPw" type="password" />
+            </mat-form-field>
+            <mat-form-field class="w-full">
+              <mat-label>{{ 'auth.newPassword' | t }}</mat-label>
+              <input matInput [(ngModel)]="newPw" type="password" />
+            </mat-form-field>
+            <mat-form-field class="w-full">
+              <mat-label>{{ 'auth.confirmPassword' | t }}</mat-label>
+              <input matInput [(ngModel)]="confirmPw" type="password" />
+            </mat-form-field>
+            <div class="flex gap-2">
+              <button mat-raised-button color="primary" (click)="changePassword()">{{ 'auth.resetBtn' | t }}</button>
+              <button mat-stroked-button (click)="showPwForm = false">{{ 'common.cancel' | t }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

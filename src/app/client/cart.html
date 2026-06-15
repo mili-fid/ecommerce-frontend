@@ -1,0 +1,230 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'cart.title' | t }}</h1>
+
+@if (cart.getItems().length === 0) {
+  <mat-card><mat-card-content class="py-8 text-center text-gray-500 dark:text-gray-400">
+    {{ 'cart.empty' | t }}
+  </mat-card-content></mat-card>
+} @else if (paymentStep === 'stripe') {
+
+  <!-- ── Stripe card form ──────────────────────────────────────── -->
+  <mat-card class="max-w-md mx-auto">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="mr-2 text-blue-600">credit_card</mat-icon>
+        {{ 'payment.stripeTitle' | t }}
+        @if (stripeSimulated) {
+          <span class="ml-2 text-xs text-orange-500">{{ 'payment.simNote' | t }}</span>
+        }
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="flex flex-col gap-4 pt-4">
+      <p class="font-bold text-xl">Total: {{ total }} TND</p>
+      @if (!stripeSimulated) {
+        <mat-form-field class="w-full">
+          <mat-label>{{ 'payment.cardNum' | t }}</mat-label>
+          <input matInput [(ngModel)]="stripeCard.number" placeholder="4242 4242 4242 4242" maxlength="19" />
+        </mat-form-field>
+        <div class="flex gap-4">
+          <mat-form-field class="flex-1">
+            <mat-label>{{ 'payment.cardExpiry' | t }}</mat-label>
+            <input matInput [(ngModel)]="stripeCard.expiry" placeholder="MM/YY" maxlength="5" />
+          </mat-form-field>
+          <mat-form-field class="w-28">
+            <mat-label>{{ 'payment.cardCvc' | t }}</mat-label>
+            <input matInput [(ngModel)]="stripeCard.cvc" placeholder="123" maxlength="4" />
+          </mat-form-field>
+        </div>
+      } @else {
+        <div class="p-4 rounded bg-orange-50 dark:bg-orange-950 text-sm text-orange-700 dark:text-orange-300">
+          Test mode: no real card needed. Click "Pay now" to simulate a successful payment.
+        </div>
+      }
+    </mat-card-content>
+    <mat-card-actions class="flex gap-3 px-4 pb-4">
+      <button mat-raised-button color="primary" class="flex-1" (click)="payByStripe()" [disabled]="stripeProcessing">
+        @if (stripeProcessing) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <mat-icon>lock</mat-icon> {{ 'payment.payNow' | t }}
+        }
+      </button>
+      <button mat-stroked-button (click)="backToCheckout()">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+
+} @else if (paymentStep === 'paypal') {
+
+  <!-- ── PayPal step ───────────────────────────────────────────── -->
+  <mat-card class="max-w-md mx-auto">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="mr-2 text-blue-800">payment</mat-icon>
+        PayPal
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="flex flex-col gap-4 pt-4">
+      <p class="font-bold text-xl">Total: {{ total }} TND</p>
+      <div class="p-4 rounded bg-blue-50 dark:bg-blue-950 text-sm text-blue-700 dark:text-blue-300">
+        @if (paypalOrderId.startsWith('sim_')) {
+          Test mode: click "Confirm PayPal payment" to simulate approval.
+        } @else {
+          {{ 'payment.paypalRedirect' | t }}
+        }
+      </div>
+    </mat-card-content>
+    <mat-card-actions class="flex gap-3 px-4 pb-4">
+      <button mat-raised-button color="primary" class="flex-1" (click)="capturePayPal()" [disabled]="placing">
+        @if (placing) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          {{ 'payment.paypalCapturing' | t }}
+        }
+      </button>
+      <button mat-stroked-button (click)="backToCheckout()">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+
+} @else {
+
+  <!-- ── Main checkout ─────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 flex flex-col gap-4">
+
+      <!-- 1. Items -->
+      <mat-card>
+        <mat-card-header><mat-card-title>{{ 'cart.items' | t }}</mat-card-title></mat-card-header>
+        <mat-card-content class="pt-4">
+          @for (item of cart.getItems(); track item.product._id) {
+            <div class="flex items-center justify-between py-2 border-b">
+              <div>
+                <p class="font-bold">{{ item.product.name }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.product.price }} TND {{ 'cart.each' | t }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button mat-icon-button (click)="cart.setQuantity(item.product._id, item.quantity - 1)"><mat-icon>remove</mat-icon></button>
+                <span class="w-8 text-center font-bold">{{ item.quantity }}</span>
+                <button mat-icon-button (click)="cart.setQuantity(item.product._id, item.quantity + 1)"><mat-icon>add</mat-icon></button>
+                <button mat-icon-button color="warn" (click)="cart.remove(item.product._id)"><mat-icon>delete</mat-icon></button>
+              </div>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- 2. Delivery map -->
+      <mat-card>
+        <mat-card-header><mat-card-title>{{ 'cart.location' | t }}</mat-card-title></mat-card-header>
+        <mat-card-content class="pt-4">
+          <mat-form-field class="w-full">
+            <mat-label>{{ 'cart.address' | t }}</mat-label>
+            <input matInput [(ngModel)]="deliveryAddress" [placeholder]="'cart.addressPh' | t" />
+          </mat-form-field>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'cart.mapHint' | t }}</p>
+            <button mat-stroked-button (click)="useMyLocation()">
+              <mat-icon>my_location</mat-icon> {{ 'cart.useLocation' | t }}
+            </button>
+          </div>
+          <div id="delivery-map" class="w-full rounded border" style="height:280px;"></div>
+          @if (deliveryLat != null) {
+            <p class="text-xs text-green-600 mt-2">
+              <mat-icon class="!text-sm !w-4 !h-4 align-middle">check_circle</mat-icon>
+              {{ 'cart.pinned' | t }}
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- 3. Driver selection -->
+      <mat-card>
+        <mat-card-header><mat-card-title>{{ 'cart.chooseDriver' | t }}</mat-card-title></mat-card-header>
+        <mat-card-content class="pt-4">
+          @if (drivers.length === 0) {
+            <p class="text-gray-500 dark:text-gray-400">{{ 'cart.noDrivers' | t }}</p>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (driver of drivers; track driver._id) {
+                <div class="flex items-center justify-between p-3 rounded border cursor-pointer"
+                     [class.border-blue-500]="selectedDriver?._id === driver._id"
+                     [class.bg-blue-50]="selectedDriver?._id === driver._id"
+                     [class.dark:bg-blue-950]="selectedDriver?._id === driver._id"
+                     (click)="selectedDriver = driver">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold overflow-hidden">
+                      @if (driver.avatar) { <img [src]="driver.avatar" class="w-10 h-10 rounded-full object-cover" /> }
+                      @else { {{ driver.firstName[0] }} }
+                    </div>
+                    <div>
+                      <p class="font-bold">{{ driver.firstName }} {{ driver.lastName }}</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <mat-icon class="!text-sm !w-4 !h-4 align-middle text-yellow-500">star</mat-icon>
+                        {{ driver.rating }}
+                        @if (driver.distanceKm != null) {
+                          · {{ driver.distanceKm }} km {{ 'cart.away' | t }} · ~{{ driver.etaMinutes }} min
+                        } @else {
+                          · {{ driver.zone || ('cart.noZone' | t) }}
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <span class="font-bold">{{ driver.deliveryFee }} TND</span>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- 4. Payment method -->
+      <mat-card>
+        <mat-card-header><mat-card-title>{{ 'cart.paymentTitle' | t }}</mat-card-title></mat-card-header>
+        <mat-card-content class="pt-4">
+          <mat-radio-group [(ngModel)]="paymentMethod" class="flex flex-col gap-3">
+            <mat-radio-button value="cash">
+              <div>
+                {{ 'cart.cash' | t }}
+                @if (paymentMethod === 'cash') {
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ 'payment.cashNote' | t }}</p>
+                }
+              </div>
+            </mat-radio-button>
+            <mat-radio-button value="card">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-blue-500">credit_card</mat-icon>
+                {{ 'cart.card' | t }}
+              </div>
+            </mat-radio-button>
+            <mat-radio-button value="paypal">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-blue-800">payment</mat-icon>
+                {{ 'cart.paypal' | t }}
+              </div>
+            </mat-radio-button>
+          </mat-radio-group>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <!-- Summary -->
+    <div>
+      <mat-card class="sticky top-4">
+        <mat-card-header><mat-card-title>{{ 'cart.summary' | t }}</mat-card-title></mat-card-header>
+        <mat-card-content class="pt-4">
+          <div class="flex justify-between py-1"><span>{{ 'cart.subtotal' | t }}</span><span>{{ cart.subtotal() }} TND</span></div>
+          <div class="flex justify-between py-1">
+            <span>{{ 'cart.deliveryFee' | t }}</span>
+            <span>{{ selectedDriver ? selectedDriver.deliveryFee + ' TND' : '—' }}</span>
+          </div>
+          <div class="flex justify-between py-2 border-t font-bold text-lg">
+            <span>{{ 'common.total' | t }}</span><span>{{ total }} TND</span>
+          </div>
+          <button mat-raised-button color="primary" class="w-full mt-4" (click)="confirmOrder()" [disabled]="placing">
+            @if (placing) { <mat-spinner diameter="20"></mat-spinner> }
+            @else { {{ 'cart.confirm' | t }} }
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+}

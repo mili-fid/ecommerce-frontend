@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Dark mode: activate dark: utilities when <html> has the .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
+@import "@angular/material/prebuilt-themes/azure-blue.css";
+
+html, body { height: 100%; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

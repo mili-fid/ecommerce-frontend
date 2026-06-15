@@ -1,0 +1,89 @@
+<div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+  <h1 class="text-3xl font-bold">{{ 'driver.title' | t }}</h1>
+  <div class="flex items-center gap-3">
+    <button mat-stroked-button (click)="shareMyLocation()">
+      <mat-icon>my_location</mat-icon> {{ locationSet ? ('driver.update' | t) : ('driver.share' | t) }}
+    </button>
+    <mat-form-field class="w-40">
+      <mat-label>{{ 'driver.myStatus' | t }}</mat-label>
+      <mat-select [(ngModel)]="availability" (ngModelChange)="setAvailability()">
+        <mat-option value="available">{{ 'driver.available' | t }}</mat-option>
+        <mat-option value="busy">{{ 'driver.busy' | t }}</mat-option>
+        <mat-option value="offline">{{ 'driver.offline' | t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
+<!-- Interactive map of nearby orders (spec 3.4.2) -->
+<mat-card class="mb-6">
+  <mat-card-content class="pt-4">
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+      <mat-icon class="!text-sm !w-4 !h-4 align-middle text-orange-500">place</mat-icon>
+      {{ 'driver.mapHint' | t }}
+    </p>
+    <div id="driver-map" class="w-full rounded border" style="height: 320px;"></div>
+  </mat-card-content>
+</mat-card>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Pending orders assigned to me -->
+  <div>
+    <h2 class="text-xl font-bold mb-4">{{ 'driver.pendingOrders' | t }} ({{ available.length }})</h2>
+    @if (available.length === 0) {
+      <mat-card><mat-card-content class="py-6 text-center text-gray-500 dark:text-gray-400">{{ 'driver.noPending' | t }}</mat-card-content></mat-card>
+    }
+    @for (order of available; track order._id) {
+      <mat-card class="mb-3">
+        <mat-card-content class="pt-4">
+          <p class="font-bold">{{ order.client?.firstName }} {{ order.client?.lastName }}</p>
+          @if (order.pickupAddress) {
+            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <mat-icon class="!text-xs !w-3 !h-3">store</mat-icon> {{ 'driver.pickup' | t }}: {{ order.pickupAddress }}
+            </p>
+          }
+          <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <mat-icon class="!text-sm !w-4 !h-4">location_on</mat-icon> {{ order.deliveryAddress }}
+            @if (order.deliveryLat != null) {
+              <span class="text-orange-500 text-xs">{{ 'driver.onMap' | t }}</span>
+            }
+          </p>
+          <p class="font-bold text-lg mt-1">{{ 'driver.fee' | t }}: {{ order.deliveryFee }} TND</p>
+          <div class="flex gap-2 mt-3">
+            <button mat-raised-button color="primary" (click)="action(order, 'accept')">{{ 'driver.accept' | t }}</button>
+            <button mat-stroked-button color="warn" (click)="action(order, 'refuse')">{{ 'driver.refuse' | t }}</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <!-- Active orders I'm working on -->
+  <div>
+    <h2 class="text-xl font-bold mb-4">{{ 'driver.activeOrders' | t }} ({{ active.length }})</h2>
+    @if (active.length === 0) {
+      <mat-card><mat-card-content class="py-6 text-center text-gray-500 dark:text-gray-400">{{ 'driver.noActive' | t }}</mat-card-content></mat-card>
+    }
+    @for (order of active; track order._id) {
+      <mat-card class="mb-3">
+        <mat-card-content class="pt-4">
+          <div class="flex justify-between items-center mb-2">
+            <p class="font-bold">{{ order.client?.firstName }} {{ order.client?.lastName }}</p>
+            <span class="px-2 py-1 rounded text-xs font-bold" [class]="statusColor(order.status)">
+              {{ 'status.' + order.status | t }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.deliveryAddress }}</p>
+          @for (item of order.items; track item.product) {
+            <p class="text-sm">{{ item.quantity }} × {{ item.name }}</p>
+          }
+          @if (nextAction(order.status); as next) {
+            <button mat-raised-button color="primary" class="mt-3 w-full" (click)="action(order, next.action)">
+              {{ next.label | t }}
+            </button>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+</div>

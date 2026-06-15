@@ -1,0 +1,141 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">{{ 'admin.usersTitle' | t }}</h1>
+  <button mat-raised-button color="primary" (click)="showCreate = !showCreate">
+    <mat-icon>person_add</mat-icon> {{ 'admin.addUser' | t }}
+  </button>
+</div>
+
+@if (showCreate) {
+  <mat-card class="mb-6">
+    <mat-card-content class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+      <mat-form-field>
+        <mat-label>{{ 'auth.firstName' | t }}</mat-label>
+        <input matInput [(ngModel)]="newUser.firstName" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'auth.lastName' | t }}</mat-label>
+        <input matInput [(ngModel)]="newUser.lastName" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'common.email' | t }}</mat-label>
+        <input matInput [(ngModel)]="newUser.email" type="email" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'auth.password' | t }}</mat-label>
+        <input matInput [(ngModel)]="newUser.password" type="password" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'common.role' | t }}</mat-label>
+        <mat-select [(ngModel)]="newUser.role">
+          <mat-option value="client">client</mat-option>
+          <mat-option value="company">company</mat-option>
+          <mat-option value="driver">driver</mat-option>
+          <mat-option value="admin">admin</mat-option>
+        </mat-select>
+      </mat-form-field>
+      @if (newUser.role === 'company') {
+        <div class="flex items-center gap-3">
+          <span class="text-sm">{{ 'common.color' | t }}</span>
+          <input type="color" [(ngModel)]="newUser.colorCode" class="w-10 h-10 rounded cursor-pointer" />
+        </div>
+      }
+    </mat-card-content>
+    <mat-card-actions class="flex gap-2 px-4 pb-4">
+      <button mat-raised-button color="primary" (click)="create()">{{ 'common.save' | t }}</button>
+      <button mat-stroked-button (click)="showCreate = false">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+}
+
+<mat-card class="mb-4">
+  <mat-card-content class="flex gap-4 pt-4 flex-wrap items-center">
+    <mat-form-field class="w-44">
+      <mat-label>{{ 'admin.filterRole' | t }}</mat-label>
+      <mat-select [(ngModel)]="filterRole" (ngModelChange)="load()">
+        <mat-option value="">{{ 'common.all' | t }}</mat-option>
+        <mat-option value="admin">admin</mat-option>
+        <mat-option value="company">company</mat-option>
+        <mat-option value="client">client</mat-option>
+        <mat-option value="driver">driver</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="w-40">
+      <mat-label>{{ 'common.status' | t }}</mat-label>
+      <mat-select [(ngModel)]="filterActive" (ngModelChange)="load()">
+        <mat-option value="">{{ 'common.all' | t }}</mat-option>
+        <mat-option value="true">{{ 'status.active' | t }}</mat-option>
+        <mat-option value="false">—</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+
+<mat-table [dataSource]="users" class="w-full shadow rounded">
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.name' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">{{ u.firstName }} {{ u.lastName }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="email">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.email' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">{{ u.email }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="role">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.role' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">
+      <span class="px-2 py-1 rounded text-xs font-bold"
+            [class.bg-red-100]="u.role==='admin'" [class.text-red-800]="u.role==='admin'"
+            [class.bg-purple-100]="u.role==='company'" [class.text-purple-800]="u.role==='company'"
+            [class.bg-blue-100]="u.role==='client'" [class.text-blue-800]="u.role==='client'"
+            [class.bg-green-100]="u.role==='driver'" [class.text-green-800]="u.role==='driver'">
+        {{ u.role }}
+      </span>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.status' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">
+      <span class="px-2 py-1 rounded text-xs font-bold"
+            [class.bg-green-100]="u.isActive" [class.text-green-700]="u.isActive"
+            [class.bg-red-100]="!u.isActive" [class.text-red-700]="!u.isActive">
+        {{ u.isActive ? ('status.active' | t) : '—' }}
+      </span>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="color">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.color' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">
+      @if (u.role === 'company') {
+        @if (editingColor === u._id) {
+          <input type="color" [(ngModel)]="colorInput" class="w-8 h-8 rounded cursor-pointer" />
+          <button mat-icon-button (click)="saveColor(u)"><mat-icon>check</mat-icon></button>
+        } @else {
+          <span class="w-6 h-6 rounded-full inline-block border cursor-pointer"
+                [style.background]="u.colorCode || '#cccccc'"
+                (click)="editingColor = u._id; colorInput = u.colorCode || '#4a4a8a'"></span>
+        }
+      }
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.actions' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let u">
+      <button mat-icon-button [color]="u.isActive ? 'warn' : 'primary'" (click)="toggle(u)">
+        <mat-icon>{{ u.isActive ? 'block' : 'check_circle' }}</mat-icon>
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="roleMenu">
+        <mat-icon>manage_accounts</mat-icon>
+      </button>
+      <mat-menu #roleMenu="matMenu">
+        <button mat-menu-item (click)="setRole(u, 'client')">Set: client</button>
+        <button mat-menu-item (click)="setRole(u, 'company')">Set: company</button>
+        <button mat-menu-item (click)="setRole(u, 'driver')">Set: driver</button>
+        <button mat-menu-item (click)="setRole(u, 'admin')">Set: admin</button>
+      </mat-menu>
+      <button mat-icon-button color="warn" (click)="remove(u)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

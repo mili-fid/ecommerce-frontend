@@ -1,0 +1,76 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">{{ 'admin.offersTitle' | t }}</h1>
+  <button mat-raised-button color="primary" (click)="showForm = !showForm">
+    <mat-icon>add</mat-icon> {{ 'admin.publishOffer' | t }}
+  </button>
+</div>
+
+@if (showForm) {
+  <mat-card class="mb-6">
+    <mat-card-header><mat-card-title>New offer for a partner company</mat-card-title></mat-card-header>
+    <mat-card-content class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+      <mat-form-field>
+        <mat-label>Company</mat-label>
+        <mat-select [(ngModel)]="form.company">
+          @for (c of companies; track c._id) {
+            <mat-option [value]="c._id">{{ c.firstName }} {{ c.lastName }} ({{ c.email }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Offer title</mat-label>
+        <input matInput [(ngModel)]="form.title" placeholder="e.g. Standard partnership 2026" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Commission (%)</mat-label>
+        <input matInput type="number" [(ngModel)]="form.commissionPercent" min="0" max="100" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Entry fee (TND)</mat-label>
+        <input matInput type="number" [(ngModel)]="form.entryFee" min="0" />
+      </mat-form-field>
+      <mat-form-field class="md:col-span-2">
+        <mat-label>Conditions</mat-label>
+        <textarea matInput [(ngModel)]="form.conditions" rows="3" placeholder="Contract terms..."></textarea>
+      </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions class="flex gap-2 px-4 pb-4">
+      <button mat-raised-button color="primary" (click)="create()">Publish</button>
+      <button mat-stroked-button (click)="showForm = false">{{ 'common.cancel' | t }}</button>
+    </mat-card-actions>
+  </mat-card>
+}
+
+<mat-table [dataSource]="offers" class="w-full shadow rounded">
+  <ng-container matColumnDef="company">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.company' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">
+      <div class="flex items-center gap-2">
+        @if (o.company?.colorCode) {
+          <span class="w-3 h-3 rounded-full inline-block" [style.background]="o.company.colorCode"></span>
+        }
+        {{ o.company?.firstName }} {{ o.company?.lastName }}
+      </div>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="title">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.offer' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o" class="font-bold">{{ o.title }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="commission">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.commission' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">{{ o.commissionPercent }}%</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="entryFee">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.entryFee' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">{{ o.entryFee }} TND</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="active">
+    <mat-header-cell *matHeaderCellDef>{{ 'admin.active' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let o">
+      <mat-slide-toggle [checked]="o.isActive" (change)="toggle(o)"></mat-slide-toggle>
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

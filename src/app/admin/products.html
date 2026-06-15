@@ -1,0 +1,71 @@
+<h1 class="text-3xl font-bold mb-6">{{ 'admin.productsTitle' | t }}</h1>
+
+<mat-card class="mb-4">
+  <mat-card-content class="flex gap-4 pt-4">
+    <mat-form-field class="w-44">
+      <mat-label>{{ 'admin.filterStatus' | t }}</mat-label>
+      <mat-select [(ngModel)]="filterStatus" (ngModelChange)="load()">
+        <mat-option value="">{{ 'common.all' | t }}</mat-option>
+        <mat-option value="pending">{{ 'admin.pendingValidation' | t }}</mat-option>
+        <mat-option value="active">{{ 'status.active' | t }}</mat-option>
+        <mat-option value="rejected">{{ 'status.rejected' | t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+
+<mat-table [dataSource]="products" class="w-full shadow rounded">
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.product' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      <div class="flex items-center gap-2">
+        @if (p.companyColorCode) {
+          <span class="w-3 h-3 rounded-full inline-block" [style.background]="p.companyColorCode"></span>
+        }
+        <span class="font-bold">{{ p.name }}</span>
+      </div>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="company">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.company' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">{{ p.company?.firstName }} {{ p.company?.lastName }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="price">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.price' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">{{ p.price }} TND</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="stock">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.stock' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      @if (editingStock === p._id) {
+        <input type="number" [(ngModel)]="stockInput" class="w-16 border rounded px-1" />
+        <button mat-icon-button (click)="saveStock(p)"><mat-icon>check</mat-icon></button>
+      } @else {
+        <span [class.text-red-500]="p.stock <= 5">{{ p.stock }}</span>
+        <button mat-icon-button (click)="editingStock = p._id; stockInput = p.stock"><mat-icon class="!text-sm">edit</mat-icon></button>
+      }
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.status' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      <span class="px-2 py-1 rounded text-xs font-bold"
+            [class.bg-yellow-100]="p.status==='pending'"
+            [class.bg-green-100]="p.status==='active'"
+            [class.bg-red-100]="p.status==='rejected'">
+        {{ 'status.' + p.status | t }}
+      </span>
+    </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <mat-header-cell *matHeaderCellDef>{{ 'common.actions' | t }}</mat-header-cell>
+    <mat-cell *matCellDef="let p">
+      @if (p.status === 'pending') {
+        <button mat-icon-button color="primary" (click)="approve(p)"><mat-icon>check_circle</mat-icon></button>
+        <button mat-icon-button color="warn" (click)="reject(p)"><mat-icon>cancel</mat-icon></button>
+      }
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

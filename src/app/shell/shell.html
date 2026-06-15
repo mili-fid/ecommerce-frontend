@@ -1,0 +1,94 @@
+<mat-toolbar color="primary" class="!flex !justify-between shadow-md">
+  <div class="flex items-center gap-2">
+    <mat-icon>shopping_bag</mat-icon>
+    <span class="font-bold">E-Shop</span>
+    <span class="hidden md:flex items-center gap-1 ml-6">
+      @for (link of links; track link.path) {
+        <a mat-button [routerLink]="link.path" routerLinkActive="!bg-white/20 rounded">
+          <mat-icon class="mr-1">{{ link.icon }}</mat-icon>{{ link.key | t }}
+        </a>
+      }
+    </span>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <!-- Language switch (spec 5.4 multilingual) -->
+    <button mat-stroked-button class="!min-w-0 !px-3 !text-white !border-white/50" (click)="i18n.toggle()">
+      {{ i18n.lang === 'en' ? 'FR' : 'EN' }}
+    </button>
+
+    <!-- Dark mode toggle (spec 5.4) -->
+    <button mat-icon-button (click)="theme.toggle()">
+      <mat-icon>{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    @if (isClient) {
+      <a mat-icon-button routerLink="/cart" [matBadge]="cart.count()" [matBadgeHidden]="cart.count() === 0" matBadgeColor="warn">
+        <mat-icon>shopping_cart</mat-icon>
+      </a>
+    }
+
+    @if (isLoggedIn) {
+      <button mat-icon-button [matMenuTriggerFor]="notifMenu" (menuOpened)="onBellOpened()"
+              [matBadge]="unread" [matBadgeHidden]="unread === 0" matBadgeColor="warn">
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <mat-menu #notifMenu="matMenu" class="!max-w-sm">
+        @if (notifications.length === 0) {
+          <div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">—</div>
+        }
+        @for (n of notifications; track n._id) {
+          <div class="px-4 py-2 border-b last:border-0 w-80" [class.bg-blue-50]="!n.read" [class.dark:bg-blue-950]="!n.read">
+            <p class="text-sm">{{ n.message }}</p>
+            <p class="text-xs text-gray-400">{{ n.createdAt | date: 'short' }}</p>
+          </div>
+        }
+      </mat-menu>
+
+      <!-- Avatar -> profile page -->
+      <a routerLink="/profile"
+         class="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center font-bold overflow-hidden cursor-pointer">
+        @if (user?.avatar) {
+          <img [src]="user!.avatar" class="w-9 h-9 rounded-full object-cover" />
+        } @else {
+          {{ initial }}
+        }
+      </a>
+      <span class="hidden md:inline text-sm">{{ user?.firstName }} ({{ user?.role }})</span>
+      <button mat-stroked-button (click)="logout()">{{ 'nav.logout' | t }}</button>
+    } @else {
+      <button mat-stroked-button (click)="goLogin()">{{ 'nav.login' | t }}</button>
+    }
+  </div>
+</mat-toolbar>
+
+<main class="p-4 md:p-8 max-w-7xl mx-auto min-h-screen">
+  <router-outlet />
+</main>
+
+<!-- Footer (spec 7.1) -->
+<footer class="mt-12 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+  <div class="max-w-7xl mx-auto px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-500 dark:text-gray-400">
+    <div>
+      <p class="font-bold text-gray-800 dark:text-white mb-2">E-Shop</p>
+      <p>Multi-Role E-Commerce Platform</p>
+      <p>Version 1.0 — June 2026</p>
+    </div>
+    <div>
+      <p class="font-bold text-gray-800 dark:text-white mb-2">Legal</p>
+      <p><a href="#" class="hover:underline">Terms of Service</a></p>
+      <p><a href="#" class="hover:underline">Privacy Policy</a></p>
+      <p><a href="#" class="hover:underline">Cookie Policy</a></p>
+    </div>
+    <div>
+      <p class="font-bold text-gray-800 dark:text-white mb-2">Contact</p>
+      <p>support&#64;eshop.tn</p>
+      <p>+216 71 000 000</p>
+      <div class="flex gap-3 mt-2">
+        <a href="#" class="hover:text-blue-500"><mat-icon class="!text-base">facebook</mat-icon></a>
+        <a href="#" class="hover:text-blue-500"><mat-icon class="!text-base">alternate_email</mat-icon></a>
+      </div>
+    </div>
+  </div>
+  <div class="text-center text-xs text-gray-400 pb-4">© 2026 E-Shop. All rights reserved.</div>
+</footer>
